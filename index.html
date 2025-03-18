@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle Financeiro</title>
-    <!-- Usando url_for para carregar arquivos estáticos -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Atualizado o caminho do CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Usando CDN para o Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -38,7 +39,7 @@
         <canvas id="graficoPizza"></canvas>
     </div>
 
-    <!-- Usando url_for para carregar o script -->
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- Atualizado o caminho do JS -->
+    <script src="script.js"></script>
 </body>
 </html>
