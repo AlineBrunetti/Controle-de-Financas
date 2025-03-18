@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -29,15 +28,22 @@ def listar_transacoes():
 def adicionar_transacao():
     dados = request.get_json()
     df = pd.read_excel(EXCEL_FILE)
-
+    
     # Criar um novo ID para a transação
     novo_id = df["id"].max() + 1 if not df.empty else 1
-    mes = datetime.now().strftime("%Y-%m")  # Captura o mês atual
-    nova_transacao = {"id": novo_id, "tipo": dados["tipo"], "valor": dados["valor"], "setor": dados["setor"], "mes": mes}
-
+    # Obter o mês atual
+    mes = pd.to_datetime('today').strftime('%Y-%m')
+    nova_transacao = {
+        "id": novo_id,
+        "tipo": dados["tipo"],
+        "valor": dados["valor"],
+        "setor": dados["setor"],
+        "mes": mes
+    }
+    
     df = pd.concat([df, pd.DataFrame([nova_transacao])], ignore_index=True)
     df.to_excel(EXCEL_FILE, index=False)
-
+    
     return jsonify({"mensagem": "Transação adicionada com sucesso"}), 201
 
 # Rota para excluir transação
