@@ -9,7 +9,7 @@ EXCEL_FILE = "database.xlsx"
 
 # Se o arquivo não existir, cria um novo
 if not os.path.exists(EXCEL_FILE):
-    df = pd.DataFrame(columns=["id", "tipo", "valor", "setor", "mes"])
+    df = pd.DataFrame(columns=["id", "tipo", "valor", "setor", "mes"])  # Adiciona o campo "mes"
     df.to_excel(EXCEL_FILE, index=False)
 
 # Página inicial - Carrega o HTML
@@ -31,14 +31,12 @@ def adicionar_transacao():
     
     # Criar um novo ID para a transação
     novo_id = df["id"].max() + 1 if not df.empty else 1
-    # Obter o mês atual
-    mes = pd.to_datetime('today').strftime('%Y-%m')
     nova_transacao = {
-        "id": novo_id,
-        "tipo": dados["tipo"],
-        "valor": dados["valor"],
-        "setor": dados["setor"],
-        "mes": mes
+        "id": novo_id, 
+        "tipo": dados["tipo"], 
+        "valor": dados["valor"], 
+        "setor": dados["setor"], 
+        "mes": dados["mes"]  # Adiciona o mês à transação
     }
     
     df = pd.concat([df, pd.DataFrame([nova_transacao])], ignore_index=True)

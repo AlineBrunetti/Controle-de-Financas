@@ -20,17 +20,19 @@ async function adicionarTransacao() {
     const tipo = document.getElementById("tipo").value;
     let valor = parseFloat(document.getElementById("valor").value);
     const setor = document.getElementById("setor").value;
+    const mes = document.getElementById("mes").value;  // Pega o mês
 
-    if (!valor || !setor) {
+    if (!valor || !setor || !mes) {
         alert("Preencha todos os campos corretamente.");
         return;
     }
 
+    // Se for uma saída, transforma o valor em negativo
     if (tipo === "saida") {
         valor = -Math.abs(valor);
     }
 
-    const transacao = { tipo, valor, setor };
+    const transacao = { tipo, valor, setor, mes };  // Envia o mês também
 
     try {
         await fetch("http://127.0.0.1:5000/transacoes", {
@@ -38,12 +40,13 @@ async function adicionarTransacao() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(transacao)
         });
-
+        
         carregarTransacoes();
     } catch (error) {
         console.error("Erro ao adicionar transação", error);
     }
 }
+
 
 function atualizarTabela() {
     const tbody = document.getElementById("transacoes");
