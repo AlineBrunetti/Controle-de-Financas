@@ -4,50 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle Financeiro</title>
-    <link rel="stylesheet" href="static/style.css">
-    <script src="static/script.js"></script>
-
-</head>
-<body>
-    <h1>Controle Financeiro</h1>
-
-    <div class="formulario">
-        <select id="tipo">
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
-        </select>
-        <input type="number" id="valor" placeholder="Valor">
-        <input type="text" id="setor" placeholder="Setor">
-        <button onclick="adicionarTransacao()">Adicionar</button>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Tipo</th>
-                <th>Valor</th>
-                <th>Setor</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="transacoes"></tbody>
-    </table>
-
-    <div class="graficos">
-        <canvas id="graficoBarras"></canvas>
-        <canvas id="graficoPizza"></canvas>
-    </div>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro</title>
+    <!-- Usando url_for para carregar arquivos estáticos -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -81,6 +38,7 @@
         <canvas id="graficoPizza"></canvas>
     </div>
 
+    <!-- Usando url_for para carregar o script -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
