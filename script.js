@@ -1,16 +1,15 @@
-let transacoes = [];
-
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     carregarTransacoes();
 });
 
 async function carregarTransacoes() {
     try {
-        const resposta = await fetch("http://127.0.0.1:5000/transacoes");
-        transacoes = await resposta.json();
-
-        atualizarTabela();
-        gerarGraficos();
+        const response = await fetch("dados.json");
+        if (!response.ok) throw new Error("Erro ao carregar os dados.");
+        
+        const transacoes = await response.json();
+        atualizarTabela(transacoes);
+        atualizarGraficos(transacoes);
     } catch (error) {
         console.error("Erro ao carregar transações", error);
     }
@@ -18,143 +17,84 @@ async function carregarTransacoes() {
 
 async function adicionarTransacao() {
     const tipo = document.getElementById("tipo").value;
-    let valor = parseFloat(document.getElementById("valor").value);
+    const valor = parseFloat(document.getElementById("valor").value);
     const setor = document.getElementById("setor").value;
-    const mes = document.getElementById("mes").value;  // Pega o mês
 
-    if (!valor || !setor || !mes) {
-        alert("Preencha todos os campos corretamente.");
+    if (!valor || setor.trim() === "") {
+        alert("Preencha todos os campos corretamente!");
         return;
     }
 
-    // Se for uma saída, transforma o valor em negativo
-    if (tipo === "saida") {
-        valor = -Math.abs(valor);
-    }
-
-    const transacao = { tipo, valor, setor, mes };  // Envia o mês também
+    const novaTransacao = { tipo, valor, setor };
 
     try {
-        await fetch("http://127.0.0.1:5000/transacoes", {
+        const response = await fetch("salvar.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(transacao)
+            body: JSON.stringify(novaTransacao),
         });
-        
+
+        if (!response.ok) throw new Error("Erro ao salvar a transação.");
+
         carregarTransacoes();
     } catch (error) {
         console.error("Erro ao adicionar transação", error);
     }
 }
 
-
-function atualizarTabela() {
+function atualizarTabela(transacoes) {
     const tbody = document.getElementById("transacoes");
     tbody.innerHTML = "";
-    transacoes.forEach(transacao => {
-        const row = `<tr>
-                        <td>${transacao.tipo}</td>
-                        <td>R$ ${transacao.valor.toFixed(2)}</td>
-                        <td>${transacao.setor}</td>
-                        <td><button onclick="excluirTransacao(${transacao.id})">Excluir</button></td>
-                     </tr>`;
-        tbody.innerHTML += row;
+
+    transacoes.forEach((t, index) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${t.tipo}</td>
+            <td>R$ ${t.valor.toFixed(2)}</td>
+            <td>${t.setor}</td>
+            <td><button onclick="removerTransacao(${index})">Remover</button></td>
+        `;
     });
 }
 
-async function excluirTransacao(id) {
-    if (confirm("Tem certeza que deseja excluir esta transação?")) {
-        try {
-            await fetch(`http://127.0.0.1:5000/transacoes/${id}`, { method: "DELETE" });
-            carregarTransacoes();
-        } catch (error) {
-            console.error("Erro ao excluir transação:", error);
-        }
+async function removerTransacao(index) {
+    try {
+        const response = await fetch("remover.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index }),
+        });
+
+        if (!response.ok) throw new Error("Erro ao remover transação.");
+
+        carregarTransacoes();
+    } catch (error) {
+        console.error("Erro ao remover transação", error);
     }
 }
 
-function gerarGrafico() {
-    if (!transacoes.length) {
-        console.log("Nenhuma transação disponível para gerar o gráfico.");
-        return;
-    }
-
-    let entradasPorMes = {};
-    let saidasPorMes = {};
-
-    transacoes.forEach(transacao => {
-        const mes = transacao.mes; // Mês
-        if (transacao.tipo === "entrada") {
-            entradasPorMes[mes] = (entradasPorMes[mes] || 0) + transacao.valor;
-        } else if (transacao.tipo === "saida") {
-            saidasPorMes[mes] = (saidasPorMes[mes] || 0) + Math.abs(transacao.valor); // Valor absoluto para saídas
-        }
-    });
-
-    // Gerar gráfico de barras (entrada vs saída)
+function atualizarGraficos(transacoes) {
     const ctxBarras = document.getElementById("graficoBarras").getContext("2d");
-    const meses = Object.keys(entradasPorMes);
-    const entradas = meses.map(mes => entradasPorMes[mes]);
-    const saidas = meses.map(mes => saidasPorMes[mes]);
+    const ctxPizza = document.getElementById("graficoPizza").getContext("2d");
 
-    // Verifica se o gráfico já existe antes de tentar destruí-lo
-    if (window.graficoBarras instanceof Chart) {
-        window.graficoBarras.destroy();
-    }
+    const setores = [...new Set(transacoes.map(t => t.setor))];
+    const valores = setores.map(setor => 
+        transacoes.filter(t => t.setor === setor).reduce((acc, t) => acc + t.valor, 0)
+    );
 
-    window.graficoBarras = new Chart(ctxBarras, {
-        type: 'bar',
+    new Chart(ctxBarras, {
+        type: "bar",
         data: {
-            labels: meses,
-            datasets: [{
-                label: 'Entradas',
-                data: entradas,
-                backgroundColor: '#4CAF50',
-                borderColor: '#388E3C',
-                borderWidth: 1
-            },
-            {
-                label: 'Saídas',
-                data: saidas,
-                backgroundColor: '#F44336',
-                borderColor: '#D32F2F',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+            labels: setores,
+            datasets: [{ label: "Gastos por setor", data: valores, backgroundColor: "blue" }]
         }
     });
 
-    // Gerar gráfico de pizza
-    const ctxPizza = document.getElementById("graficoPizza").getContext("2d");
-    const totalEntradas = entradas.reduce((acc, val) => acc + val, 0);
-    const totalSaidas = saidas.reduce((acc, val) => acc + val, 0);
-
-    if (window.graficoPizza instanceof Chart) {
-        window.graficoPizza.destroy();
-    }
-
-    window.graficoPizza = new Chart(ctxPizza, {
-        type: 'pie',
+    new Chart(ctxPizza, {
+        type: "pie",
         data: {
-            labels: ['Entradas', 'Saídas'],
-            datasets: [{
-                data: [totalEntradas, totalSaidas],
-                backgroundColor: ['#4CAF50', '#F44336'],
-                hoverBackgroundColor: ['#388E3C', '#D32F2F']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
+            labels: setores,
+            datasets: [{ data: valores, backgroundColor: ["red", "green", "blue", "orange"] }]
         }
     });
 }
-
